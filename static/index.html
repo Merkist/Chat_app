@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Головна сторінка</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+        }
+        header {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 1em 0;
+            text-align: center;
+        }
+        main {
+            max-width: 800px;
+            width: 100%;
+            padding: 1em;
+            margin-top: 20px;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .actions button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .actions button:hover {
+            background-color: #45a049;
+        }
+        .search-bar {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+        }
+        .search-bar button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 0 5px 5px 0;
+        }
+        .chat-list {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .chat-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .chat-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>{% if username %}Вітаємо {{ username }}!{% else %}Вітаємо!{% endif %}</h1>
+</header>
+<main>
+
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+
+    <div class="actions">
+        <button onclick="location.href='/register'">Реєстрація</button>
+        {% if username %}
+            <button id="logout-button"><a href="/logout">Вихід</a></button>
+        {% else %}
+            <button id="login-button"><a href="/login">Вхід</a></button>
+        {% endif %}
+        <button onclick="location.href='/create_chat'">Створити новий чат</button>
+    </div>
+    <div class="search-bar">
+        <input type="text" placeholder="Пошук чатів..." id="search-input">
+        <button onclick="searchChats()">Пошук</button>
+    </div>
+    <div class="chat-list" id="chat-list-find">
+        <h3>Результат пошуку чатів:</h3>
+    </div>
+    <div class="chat-list" id="chat-list">
+        <h3>Ваші чати:</h3>
+        {% if chats %}
+            {% for chat in chats %}
+            <div class="chat-item">
+                <p onclick="location.href='/chat/{{chat.id}}'">{{ chat.name }}</p>
+            </div>
+            {% else %}
+            <p>У вас немає чатів.</p>
+            {% endfor %}
+        {% else %}
+            <p>Зареєструйтесь.</p>
+        {% endif %}
+    </div>
+</main>
+
+<script>
+    function searchChats() {
+        const query = document.getElementById('search-input').value;
+
+        // Відправляємо запит на сервер
+        fetch(`/search_chats?query=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                // Очищаємо список чатів перед новим рендерингом
+                const chatList = document.getElementById('chat-list-find');
+                chatList.innerHTML = '<h3>Результат пошуку чатів:</h3>'; // Скидаємо старі чати
+
+                // Якщо є чати, додаємо їх
+                if (data.chats.length > 0) {
+                    data.chats.forEach(chat => {
+                        const div = document.createElement('div');
+                        div.className = 'chat-item';
+                        div.textContent = chat.name;
+                        div.onclick = () => location.href = `/chat/${chat.id}`;
+                        chatList.appendChild(div);
+                    });
+                } else {
+                    // Якщо чати не знайдені, показуємо повідомлення
+                    chatList.innerHTML += '<p>Чати не знайдено</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+</script>
+</body>
+</html>
+
+

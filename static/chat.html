@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room</title>
+</head>
+<body>
+<h1>Chat Room</h1>
+<div id="messages">
+  {% for message in messages %}
+  <p><strong>{{ message.username }}</strong>: {{ message.content }}</p>
+  {% endfor %}
+</div>
+
+{% if is_member %}
+<form id="chat-form">
+  <input type="text" id="message-input" placeholder="Type a message..." required>
+  <button type="submit">Send</button>
+</form>
+{% else %}
+<form action="/chat/{{ chat_id }}/join" method="post">
+  <button type="submit">Join Chat</button>
+</form>
+{% endif %}
+
+<script>
+  const ws = new WebSocket(`ws://${window.location.host}/ws/chat/{{ chat_id }}`);
+
+  ws.onopen = function() {
+    console.log("WebSocket connection opened.");
+  };
+
+  ws.onmessage = function(event) {
+    console.log("Message received:", event.data);
+    const messagesDiv = document.getElementById('messages');
+    const newMessage = document.createElement('p');
+    newMessage.innerText = event.data;
+    messagesDiv.appendChild(newMessage);
+  };
+
+  ws.onerror = function(error) {
+    console.log("WebSocket error:", error);
+  };
+
+  ws.onclose = function() {
+    console.log("WebSocket connection closed.");
+  };
+
+  document.getElementById('chat-form').onsubmit = function(event) {
+    event.preventDefault();
+    const input = document.getElementById('message-input');
+    ws.send(input.value);
+    input.value = '';
+  };
+</script>
+</body>
+</html>
